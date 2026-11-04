@@ -33,6 +33,10 @@ npm test                    # unitarias + integración contra Redis real (base 1
 npm run typecheck && npm run lint
 ```
 
+## Despliegue
+
+En Azure: ver [deploy/azure/README.md](deploy/azure/README.md). También hay un script para AWS, aún sin probar en una cuenta real: [deploy/aws/README.md](deploy/aws/README.md).
+
 ## Documentación
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): diseño, decisiones y respuestas a lo que pide el enunciado.
