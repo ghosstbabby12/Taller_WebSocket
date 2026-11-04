@@ -1,0 +1,24 @@
+{
+	servers {
+		# Sin HTTP/3: el grupo de seguridad solo abre TCP, y anunciarlo haría perder tiempo al navegador.
+		protocols h1 h2
+	}
+}
+
+{$SITE_ADDRESS} {
+	encode {
+		# Comprimir el flujo SSE retendría eventos en el búfer del compresor.
+		match {
+			header Content-Type text/html*
+			header Content-Type text/css*
+			header Content-Type text/javascript*
+			header Content-Type application/json*
+		}
+		gzip
+	}
+
+	reverse_proxy lb:80 {
+		# SSE: cada evento sale de inmediato, sin acumularse aquí.
+		flush_interval -1
+	}
+}

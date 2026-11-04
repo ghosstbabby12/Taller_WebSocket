@@ -1,0 +1,33 @@
+# Se aplica sobre docker-compose.yml en la nube. El único punto de entrada público es Caddy, que da
+# TLS y HTTP/2: con HTTP/1.1 un navegador solo admite 6 conexiones SSE por dominio.
+services:
+  redis:
+    ports: !reset []
+    restart: unless-stopped
+
+  app:
+    restart: unless-stopped
+
+  lb:
+    ports: !reset []
+    restart: unless-stopped
+
+  edge:
+    image: caddy:2.10-alpine
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?falta SITE_ADDRESS}
+    volumes:
+      - ./deploy/cloud/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    ulimits:
+      nofile: { soft: 200000, hard: 200000 }
+    restart: unless-stopped
+    depends_on:
+      lb:
+        condition: service_started
+
+volumes:
+  caddy-data:
