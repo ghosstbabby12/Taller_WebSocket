@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Transmisión de actas</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Transmisión de actas</h1>
+      <p id="connection">Sin conexión</p>
+      <form id="login">
+        <label>Jurado <input id="jurado" placeholder="JUR-88134" required /></label>
+        <label>Código de acceso <input id="code" type="password" required /></label>
+        <button>Entrar</button>
+      </form>
+      <!-- Formulario provisional con el JSON de 3.1: ver la guía para el formulario definitivo. -->
+      <form id="form" hidden>
+        <label
+          >Acta (JSON)
+          <textarea id="payload" rows="12" required></textarea>
+        </label>
+        <button>Encolar y transmitir</button>
+      </form>
+      <h2>Envíos</h2>
+      <ul id="items"></ul>
+    </main>
+    <script type="module" src="/js/jurado-page.js"></script>
+  </body>
+</html>
