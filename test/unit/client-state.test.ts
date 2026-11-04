@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fullJitterDelay } from '../../public/js/backoff.js';
+import { indexCatalog, parseTopic } from '../../public/js/catalog.js';
 import { createResultsState, summarize } from '../../public/js/results-state.js';
 
 const snapshot = { topic: 'dep', seq: 5, state: { 'v:C1': 10, mesas_totales: 100 } };
@@ -34,6 +35,30 @@ describe('estado del cliente público', () => {
     });
     expect(summary.ranking.map((r) => r.candidate)).toEqual(['C2', 'C1']);
     expect(summary.percent).toBe(25);
+  });
+});
+
+describe('catálogo del cliente', () => {
+  const catalog = indexCatalog([
+    [4201, 176, 11],
+    [4202, 176, 11],
+    [9, 12, 2],
+  ]);
+
+  it('ubica una mesa y agrupa los puestos por municipio sin repetir', () => {
+    expect(catalog.locationOf(4201)).toEqual({ puesto: 176, municipio: 11 });
+    expect(catalog.locationOf(1)).toBeUndefined();
+    expect(catalog.municipioOf(176)).toBe(11);
+    expect(catalog.municipios()).toEqual([2, 11]);
+    expect(catalog.puestosOf(11)).toEqual([176]);
+  });
+
+  it('un tópico inválido en la URL vuelve al departamento', () => {
+    expect(parseTopic('mun:11')).toBe('mun:11');
+    expect(parseTopic('puesto:176')).toBe('puesto:176');
+    for (const invalid of [null, '', 'mesa:1', 'mun:', 'dep,mun:1']) {
+      expect(parseTopic(invalid)).toBe('dep');
+    }
   });
 });
 
