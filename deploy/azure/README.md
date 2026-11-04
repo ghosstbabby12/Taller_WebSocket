@@ -16,9 +16,9 @@ incluidos los cambios sin commit.
 | `deploy/azure/azure.sh stop` / `start`  | Desasigna o enciende                                                 |
 | `deploy/azure/azure.sh destroy`         | Borra todo, datos incluidos. Pide confirmación                       |
 
-Variables opcionales: `AZURE_LOCATION` (por defecto `eastus2`) y `AZURE_VM_SIZE` (por defecto
-`Standard_B2ms`). Azure for Students limita regiones y vCPU: si `provision` falla por eso, cambia
-estas variables.
+Variables opcionales: `AZURE_LOCATION` (por defecto `mexicocentral`) y `AZURE_VM_SIZE` (por defecto
+`Standard_B2s_v2`). Azure for Students limita las regiones (`chilecentral`, `mexicocentral`,
+`belgiumcentral`, `spaincentral`, `switzerlandnorth`) y a 6 vCPU por región.
 
 ## Seguridad
 
