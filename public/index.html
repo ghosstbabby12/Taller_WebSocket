@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Preconteo en vivo</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <main>
+      <p class="notice">
+        Preconteo informativo. El resultado oficial es el escrutinio de las actas físicas.
+      </p>
+      <h1>Resultados: <span id="topic"></span></h1>
+      <p><span id="connection">Conectando…</span> · instancia <code id="instance">-</code></p>
+      <p id="degraded" class="alert" hidden>
+        Actualización en pausa por una falla técnica. Los datos pueden estar desactualizados.
+      </p>
+      <p id="informed">Cargando…</p>
+      <p id="review"></p>
+      <ol id="ranking"></ol>
+      <h2>Correcciones</h2>
+      <ul id="corrections"></ul>
+    </main>
+    <script type="module" src="/js/public-page.js"></script>
+  </body>
+</html>
