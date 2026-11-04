@@ -3,29 +3,120 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Transmisión de actas</title>
+    <title>Transmisión de actas · Preconteo</title>
     <link rel="stylesheet" href="/app.css" />
   </head>
   <body>
-    <main>
+    <header class="topbar">
+      <a class="brand" href="/">Preconteo</a>
+      <span id="connection-pill" class="pill" data-state="reconnecting" role="status">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="connection">Sin conexión</span>
+      </span>
+    </header>
+
+    <main class="page page-narrow">
       <h1>Transmisión de actas</h1>
-      <p id="connection">Sin conexión</p>
-      <form id="login">
-        <label>Jurado <input id="jurado" placeholder="JUR-88134" required /></label>
-        <label>Código de acceso <input id="code" type="password" required /></label>
-        <button>Entrar</button>
-      </form>
-      <!-- Formulario provisional con el JSON de 3.1: ver la guía para el formulario definitivo. -->
-      <form id="form" hidden>
-        <label
-          >Acta (JSON)
-          <textarea id="payload" rows="12" required></textarea>
+
+      <form id="login" class="card form">
+        <p class="hint">
+          Después de ingresar puede llenar actas sin señal: se guardan aquí y se envían solas.
+        </p>
+        <label>
+          Jurado
+          <input id="jurado" placeholder="JUR-88134" autocomplete="username" required />
         </label>
-        <button>Encolar y transmitir</button>
+        <label>
+          Código de acceso
+          <input id="code" type="password" autocomplete="current-password" required />
+        </label>
+        <p id="login-error" class="alert" role="alert" hidden></p>
+        <button class="primary">Ingresar</button>
       </form>
-      <h2>Envíos</h2>
-      <ul id="items"></ul>
+
+      <div id="session" hidden>
+        <p class="session-line">
+          <span>Jurado <strong id="jurado-label"></strong></span>
+          <button id="logout" type="button" class="link">Salir</button>
+        </p>
+
+        <form id="form" class="card form">
+          <h2>Nueva acta</h2>
+          <div class="field-row">
+            <label>
+              Mesa
+              <input id="mesa" type="number" min="1" inputmode="numeric" required />
+            </label>
+            <label>
+              Versión
+              <input id="version" type="number" min="1" value="1" inputmode="numeric" required />
+            </label>
+          </div>
+          <p id="mesa-location" class="hint" data-valid="false">Digite el número de la mesa.</p>
+          <p class="hint">Deje la versión en 1. Use 2, 3… solo para corregir un acta ya enviada.</p>
+
+          <fieldset>
+            <legend>Votos</legend>
+            <div class="field-grid">
+              <label
+                >Candidato 1 <input id="C1" type="number" min="0" inputmode="numeric" required
+              /></label>
+              <label
+                >Candidato 2 <input id="C2" type="number" min="0" inputmode="numeric" required
+              /></label>
+              <label
+                >Candidato 3 <input id="C3" type="number" min="0" inputmode="numeric" required
+              /></label>
+              <label
+                >En blanco <input id="BLANCO" type="number" min="0" inputmode="numeric" required
+              /></label>
+              <label
+                >Nulos <input id="NULO" type="number" min="0" inputmode="numeric" required
+              /></label>
+              <label
+                >No marcados
+                <input id="NO_MARCADO" type="number" min="0" inputmode="numeric" required
+              /></label>
+            </div>
+          </fieldset>
+
+          <label>
+            Sufragantes
+            <input id="sufragantes" type="number" min="0" inputmode="numeric" required />
+          </label>
+
+          <div id="totals" class="totals" data-state="idle" aria-live="polite">
+            <p>Suma de votos: <strong id="totals-sum">0</strong></p>
+            <p id="totals-message"></p>
+          </div>
+
+          <label>
+            Foto del acta
+            <input id="foto" type="file" accept="image/*" capture="environment" required />
+          </label>
+          <p class="hint">Por ahora solo se transmite la huella de la foto, no la imagen.</p>
+
+          <button class="primary">Enviar acta</button>
+        </form>
+
+        <section class="card" aria-labelledby="items-title">
+          <div class="section-head">
+            <h2 id="items-title">Envíos</h2>
+            <span id="pending" class="badge" hidden></span>
+          </div>
+          <p id="items-empty" class="empty">Todavía no ha enviado actas desde este equipo.</p>
+          <ul id="items" class="items"></ul>
+        </section>
+      </div>
     </main>
+
+    <template id="item-template">
+      <li class="item">
+        <span class="item-title"></span>
+        <span class="item-message"></span>
+      </li>
+    </template>
+
     <script type="module" src="/js/jurado-page.js"></script>
   </body>
 </html>
