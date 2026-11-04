@@ -25,25 +25,25 @@ Si algo de esto falla, arréglalo antes de seguir: todo lo demás se apoya aquí
 
 ## Qué ya existe
 
-| Req                  | Estado                                                            | Evidencia                                                           |
-| -------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------- |
-| RF-1 idempotencia    | Hecho                                                             | `test/integration/submit-acta.test.ts`, smoke                       |
-| RF-2 convergencia    | Hecho                                                             | Prueba de todas las permutaciones                                   |
-| RF-3 atomicidad      | Hecho                                                             | Lua; prueba municipio = suma de puestos, con escrituras simultáneas |
-| RF-5 tópicos         | Hecho                                                             | `src/fanout/topic-registry.ts`                                      |
-| RF-6 reconexión      | Hecho, **falta medir memoria**                                    | `publication.test.ts`, smoke                                        |
-| RF-4 fan-out         | Código hecho, **sin medir a escala**                              | Pruebas unitarias del envío por lotes                               |
-| RF-9 contrapresión   | Política hecha, **sin demostrar con cliente lento real**          | Pruebas unitarias                                                   |
-| RF-10 sin Redis      | Hecho                                                             | `smoke --chaos`                                                     |
-| RF-10 avalancha      | Backoff hecho, **falta la gráfica**                               | `public/js/backoff.js`                                              |
-| RF-7 cola y bloqueo  | **Solo** el encolado en `submit_acta.lua`                         |                                                                     |
-| RF-8 presencia       | **Sin empezar**                                                   |                                                                     |
-| RT-2, RT-3           | Hecho                                                             | Smoke: 16 conexiones en 8 instancias                                |
-| RT-6 sin red         | Hecho, con corte real del balanceador; **formulario provisional** | Probado en Chrome                                                   |
-| RT-5 transportes     | SSE y WebSocket conviven, **sin justificación medida**            |                                                                     |
-| RT-4, RT-7 tablero   | La API `/api/ops/metrics` existe, **falta el panel**              |                                                                     |
-| RT-1, RT-10 nube     | **Sin desplegar**: solo corre en local                            |                                                                     |
-| RT-8 carga, RT-9 INP | **Sin empezar**                                                   |                                                                     |
+| Req                  | Estado                                                   | Evidencia                                                           |
+| -------------------- | -------------------------------------------------------- | ------------------------------------------------------------------- |
+| RF-1 idempotencia    | Hecho                                                    | `test/integration/submit-acta.test.ts`, smoke                       |
+| RF-2 convergencia    | Hecho                                                    | Prueba de todas las permutaciones                                   |
+| RF-3 atomicidad      | Hecho                                                    | Lua; prueba municipio = suma de puestos, con escrituras simultáneas |
+| RF-5 tópicos         | Hecho                                                    | `src/fanout/topic-registry.ts`                                      |
+| RF-6 reconexión      | Hecho, **falta medir memoria**                           | `publication.test.ts`, smoke                                        |
+| RF-4 fan-out         | Código hecho, **sin medir a escala**                     | Pruebas unitarias del envío por lotes                               |
+| RF-9 contrapresión   | Política hecha, **sin demostrar con cliente lento real** | Pruebas unitarias                                                   |
+| RF-10 sin Redis      | Hecho                                                    | `smoke --chaos`                                                     |
+| RF-10 avalancha      | Backoff hecho, **falta la gráfica**                      | `public/js/backoff.js`                                              |
+| RF-7 cola y bloqueo  | **Solo** el encolado en `submit_acta.lua`                |                                                                     |
+| RF-8 presencia       | **Sin empezar**                                          |                                                                     |
+| RT-2, RT-3           | Hecho                                                    | Smoke: 16 conexiones en 8 instancias                                |
+| RT-6 sin red         | Hecho, con formulario real y corte real del balanceador  | Probado en Chrome                                                   |
+| RT-5 transportes     | SSE y WebSocket conviven, **sin justificación medida**   |                                                                     |
+| RT-4, RT-7 tablero   | La API `/api/ops/metrics` existe, **falta el panel**     |                                                                     |
+| RT-1, RT-10 nube     | Desplegado en Azure, ver `deploy/azure/README.md`        | Smoke contra la URL pública                                         |
+| RT-8 carga, RT-9 INP | **Sin empezar**                                          |                                                                     |
 
 ## Reglas que no se pueden romper
 
@@ -64,17 +64,10 @@ clases concretas se conectan solo en `main.ts`. Antes de cada commit: `npm run t
 
 Trabaja en una rama por tarea. Cada una termina cuando se cumple su criterio.
 
-### 1. Desplegar en la nube ya (RT-1, RT-10)
+### 1. Desplegar en la nube (RT-1, RT-10): hecho
 
-Hazlo primero: desplegar al final es la forma clásica de perder la sustentación.
-
-- Lo más directo es una VM grande con este mismo `docker-compose.yml`. Evita plataformas serverless, que
-  cortan conexiones largas y escalan a cero.
-- Ponle TLS y **HTTP/2** delante. Con HTTP/1.1 el navegador permite solo 6 conexiones SSE por dominio.
-- Sube `ulimit -n` y los `net.core.somaxconn` del host.
-- Apaga la VM cuando no la uses, y confirma con el grupo quién paga.
-
-**Listo cuando:** el smoke pasa con `BASE_URL=https://...` y la URL funciona sin que nadie intervenga.
+Ya está en una VM de Azure. La máquina se apaga entre sesiones: enciéndela con
+`deploy/azure/azure.sh start`. Publica cambios con `deploy/azure/azure.sh deploy`.
 
 ### 2. Prueba de carga (RT-8)
 
@@ -172,10 +165,8 @@ Arréglala cuando toques esa zona:
   su mesa.
 - La app del jurado no sube la foto: solo manda `hash_foto`. Va por HTTP, no por el WebSocket, que tiene
   tope de 16 KiB.
-- El formulario del jurado es un cuadro de JSON: el enunciado pide digitar totales por candidato.
 - El jurado no recibe aún «corrección o rechazo» posterior del servidor. Necesita canal por jurado y
   bandeja durable, porque suele estar desconectado.
-- Si su token expira, `jurado-client.js` reintenta sin fin: debe manejar el cierre 4401 y pedir login.
 - `/api/ops/metrics` y el login no tienen autenticación ni límite de tasa, y `/api/public/stream` no tiene
   límite por IP.
 - Redis y nginx son puntos únicos de falla. Si se queda así, explícalo en el informe.

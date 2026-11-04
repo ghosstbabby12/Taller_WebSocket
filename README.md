@@ -21,6 +21,7 @@ npm run stack:down          # apaga y BORRA los datos
 | --------------------------------- | -------------------------------------------- |
 | `/` y `/?topic=mun:11`            | Página pública (SSE)                         |
 | `/jurado.html`                    | App del jurado (WebSocket, funciona sin red) |
+| `/como-funciona.html`             | Explicación del sistema                      |
 | `/api/public/snapshot?topics=dep` | Fotografía por polling, con ETag             |
 | `/api/ops/metrics`                | Métricas de todas las instancias (JSON)      |
 | `/api/instance`                   | Identificador de la instancia que respondió  |
