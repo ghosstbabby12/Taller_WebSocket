@@ -1,0 +1,64 @@
+# Stack completo: Redis + seed + 8 instancias + balanceador sin afinidad (RT-1, RT-2, RT-3).
+name: preconteo
+
+x-app-env: &app-env
+  REDIS_URL: redis://redis:6379/0
+  AUTH_SECRET: ${AUTH_SECRET:?copie .env.example a .env}
+  ACCESS_CODE_JURADO: ${ACCESS_CODE_JURADO:?copie .env.example a .env}
+  ACCESS_CODE_AUDITOR: ${ACCESS_CODE_AUDITOR:?copie .env.example a .env}
+
+services:
+  redis:
+    image: redis:7.4-alpine
+    command: ['redis-server', '/usr/local/etc/redis/redis.conf']
+    volumes:
+      - ./deploy/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-data:/data
+    ports:
+      - '127.0.0.1:6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  seed:
+    build: .
+    command: ['node', 'dist/seed.js']
+    environment: *app-env
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: 'no'
+
+  app:
+    build: .
+    environment: *app-env
+    deploy:
+      replicas: 8
+    ulimits:
+      nofile: { soft: 100000, hard: 100000 }
+    stop_grace_period: 15s
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/healthz']
+      interval: 3s
+      timeout: 2s
+      retries: 15
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+
+  lb:
+    image: nginx:1.29-alpine
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - '${LB_PORT:-8080}:80'
+    ulimits:
+      nofile: { soft: 200000, hard: 200000 }
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  redis-data:
