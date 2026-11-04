@@ -5,6 +5,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { constantTimeEquals, type Role, type TokenService } from '../../application/auth.js';
 import type { SnapshotService } from '../../application/snapshot-service.js';
+import { buildCatalog } from '../../domain/catalog.js';
 import { MAX_TOPICS_PER_CONNECTION, isTopic, type Topic } from '../../domain/topics.js';
 import type { MetricsStore } from '../../infrastructure/metrics/metrics-store.js';
 import type { RedisHealth } from '../../infrastructure/redis/redis-health.js';
@@ -137,6 +138,17 @@ export function buildHttpServer(deps: HttpDependencies): FastifyInstance {
         connection.close(encodeSseEvent('status', { redis: 'down' }));
       });
     },
+  );
+
+  // Geografía electoral para los selectores: no cambia durante la jornada, así que se cachea.
+  const catalogBody = JSON.stringify({
+    mesas: buildCatalog().map(({ mesa, puesto, municipio }) => [mesa, puesto, municipio]),
+  });
+  app.get('/api/public/catalog', async (_request, reply) =>
+    reply
+      .header('Content-Type', 'application/json')
+      .header('Cache-Control', 'public, max-age=3600')
+      .send(catalogBody),
   );
 
   app.get('/api/ops/metrics', async (_request, reply) => {
