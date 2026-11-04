@@ -54,5 +54,11 @@ export function summarize(values) {
     total,
     percent: total > 0 ? (informed / total) * 100 : 0,
     inReview: values.en_verificacion ?? 0,
+    voters: values.sufragantes ?? 0,
+    otherVotes: {
+      blank: values['v:BLANCO'] ?? 0,
+      invalid: values['v:NULO'] ?? 0,
+      unmarked: values['v:NO_MARCADO'] ?? 0,
+    },
   };
 }

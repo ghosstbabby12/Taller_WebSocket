@@ -3,25 +3,134 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Preconteo en vivo</title>
+    <title>Preconteo electoral</title>
+    <meta name="description" content="Resultados del preconteo electoral en tiempo real." />
     <link rel="stylesheet" href="/app.css" />
   </head>
   <body>
-    <main>
+    <header class="topbar">
+      <a class="brand" href="/">Preconteo</a>
+      <span id="connection-pill" class="pill" data-state="connecting" role="status">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="connection">Conectando…</span>
+      </span>
+    </header>
+
+    <main class="page">
       <p class="notice">
-        Preconteo informativo. El resultado oficial es el escrutinio de las actas físicas.
+        Reporte informativo. El resultado oficial es el escrutinio de las actas físicas.
       </p>
-      <h1>Resultados: <span id="topic"></span></h1>
-      <p><span id="connection">Conectando…</span> · instancia <code id="instance">-</code></p>
-      <p id="degraded" class="alert" hidden>
-        Actualización en pausa por una falla técnica. Los datos pueden estar desactualizados.
+
+      <p id="degraded" class="alert" role="alert" hidden>
+        Actualización en pausa por una falla técnica. Las cifras pueden estar desactualizadas.
       </p>
-      <p id="informed">Cargando…</p>
-      <p id="review"></p>
-      <ol id="ranking"></ol>
-      <h2>Correcciones</h2>
-      <ul id="corrections"></ul>
+
+      <div class="page-head">
+        <h1 id="title">Departamento</h1>
+        <form id="scope" class="scope">
+          <label>
+            Municipio
+            <select id="municipio">
+              <option value="">Todos</option>
+            </select>
+          </label>
+          <label>
+            Puesto
+            <select id="puesto" disabled>
+              <option value="">Todos</option>
+            </select>
+          </label>
+        </form>
+      </div>
+
+      <section class="card progress-card" aria-label="Avance del preconteo">
+        <div class="progress-head">
+          <div>
+            <p class="label">Mesas informadas</p>
+            <p id="percent" class="figure">–</p>
+          </div>
+          <p id="informed" class="progress-count">–</p>
+        </div>
+        <div
+          id="progress"
+          class="bar"
+          role="progressbar"
+          aria-label="Porcentaje de mesas informadas"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <div id="progress-fill" class="bar-fill"></div>
+        </div>
+        <dl class="stats">
+          <div>
+            <dt>Sufragantes</dt>
+            <dd id="voters">–</dd>
+          </div>
+          <div>
+            <dt>Actas en verificación</dt>
+            <dd id="review">–</dd>
+          </div>
+          <div>
+            <dt>Última actualización</dt>
+            <dd id="updated">–</dd>
+          </div>
+        </dl>
+      </section>
+
+      <div class="columns">
+        <section class="card" aria-labelledby="ranking-title">
+          <h2 id="ranking-title">Votos por candidato</h2>
+          <p id="ranking-empty" class="empty">Aún no hay mesas informadas en este nivel.</p>
+          <ol id="ranking" class="ranking"></ol>
+          <p id="ranking-note" class="hint" hidden>
+            El porcentaje se calcula sobre los votos por candidatos.
+          </p>
+          <dl class="stats stats-compact">
+            <div>
+              <dt>En blanco</dt>
+              <dd id="blank">–</dd>
+            </div>
+            <div>
+              <dt>Nulos</dt>
+              <dd id="invalid">–</dd>
+            </div>
+            <div>
+              <dt>No marcados</dt>
+              <dd id="unmarked">–</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="card" aria-labelledby="corrections-title">
+          <h2 id="corrections-title">Correcciones</h2>
+          <p class="hint">
+            Si una cifra cambia o baja, aquí se explica por qué. Las actas en verificación no suman
+            hasta que una persona las revise.
+          </p>
+          <p id="corrections-empty" class="empty">No se ha corregido ninguna acta en este nivel.</p>
+          <ul id="corrections" class="corrections"></ul>
+        </section>
+      </div>
     </main>
+
+    <footer class="footer">
+      <a href="/como-funciona.html">Cómo funciona</a>
+      <a href="/jurado.html">Acceso de jurados</a>
+      <span>Instancia <code id="instance">–</code></span>
+    </footer>
+
+    <template id="candidate-template">
+      <li class="candidate">
+        <div class="candidate-line">
+          <span class="candidate-name"></span>
+          <span class="candidate-share"></span>
+        </div>
+        <div class="bar"><div class="bar-fill"></div></div>
+        <span class="candidate-votes"></span>
+      </li>
+    </template>
+
     <script type="module" src="/js/public-page.js"></script>
   </body>
 </html>

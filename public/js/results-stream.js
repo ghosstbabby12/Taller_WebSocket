@@ -40,7 +40,15 @@ export class ResultsStream {
     this.source.onerror = () => this.reconnect();
   }
 
+  /** Cierra para siempre, por ejemplo al cambiar de tópico: no vuelve a reconectar. */
+  stop() {
+    this.stopped = true;
+    this.source?.close();
+    clearTimeout(this.timer);
+  }
+
   reconnect() {
+    if (this.stopped) return;
     this.source?.close();
     clearTimeout(this.timer);
     this.onStatus({ connection: 'reconnecting' });
