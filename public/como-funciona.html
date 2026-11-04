@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cómo funciona · Preconteo</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/">Preconteo</a>
+    </header>
+
+    <main class="page page-narrow prose">
+      <h1>Cómo funciona</h1>
+      <p class="lead">
+        Un acta que entra debe llegar, con garantías distintas, a tres audiencias repartidas en ocho
+        servidores que no comparten memoria. Redis es lo que los hace comportarse como un solo
+        sistema.
+      </p>
+
+      <h2>El camino de un acta</h2>
+      <ol class="steps">
+        <li>
+          <strong>El jurado la envía.</strong> Queda guardada en su teléfono y se transmite por
+          WebSocket en cuanto hay señal. Si la conexión cae, se reintenta sola sin sumar dos veces.
+        </li>
+        <li>
+          <strong>Redis la registra en un solo paso.</strong> Un script actualiza a la vez mesa,
+          puesto, municipio y departamento. Si los totales no cuadran, va a verificación humana y no
+          suma.
+        </li>
+        <li>
+          <strong>El jurado recibe respuesta.</strong> Siempre sabe si quedó registrada, incluso
+          cuando reenvía algo que ya había llegado.
+        </li>
+        <li>
+          <strong>Cada dos segundos se publica lo que cambió.</strong> Se agrupan las actas de esa
+          ventana y solo viajan las cifras distintas, no un mensaje por acta.
+        </li>
+        <li>
+          <strong>Las ocho instancias lo reparten.</strong> Cada una envía por lotes a quienes miran
+          ese municipio o puesto, cediendo el turno para no congelar a los demás usuarios.
+        </li>
+      </ol>
+
+      <h2>Las tres audiencias</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Audiencia</th>
+              <th>Transporte</th>
+              <th>Garantía</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Jurados</td>
+              <td>WebSocket</td>
+              <td>El acta se registra una sola vez y el jurado lo sabe con certeza.</td>
+            </tr>
+            <tr>
+              <td>Público</td>
+              <td>Server-Sent Events</td>
+              <td>Quien se reconecta queda igual que quien nunca se fue.</td>
+            </tr>
+            <tr>
+              <td>Auditores</td>
+              <td>WebSocket (en construcción)</td>
+              <td>Dos auditores nunca trabajan sobre la misma acta.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Cuando algo falla</h2>
+      <ul>
+        <li>
+          <strong>Se corta la red del jurado:</strong> el acta espera en el teléfono y sale sola.
+        </li>
+        <li><strong>Llegan correcciones en desorden:</strong> siempre gana la versión más alta.</li>
+        <li>
+          <strong>Un cliente se desconecta:</strong> vuelve con su cursor y recibe solo lo que le
+          faltó.
+        </li>
+        <li>
+          <strong>Redis no responde:</strong> el jurado recibe un rechazo explícito y el público ve
+          un aviso.
+        </li>
+        <li>
+          <strong>Muere una instancia:</strong> sus clientes reconectan a tiempos aleatorios contra
+          las demás.
+        </li>
+      </ul>
+
+      <h2>Qué falta</h2>
+      <p>
+        La consola de auditores con bloqueo exclusivo y presencia, el tablero de operación y las
+        mediciones bajo carga siguen en desarrollo.
+      </p>
+
+      <p><a href="/">Volver a los resultados</a></p>
+    </main>
+  </body>
+</html>
