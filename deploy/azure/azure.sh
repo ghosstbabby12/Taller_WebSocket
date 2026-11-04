@@ -45,6 +45,18 @@ remote() {
     -o ConnectTimeout=10 "$ADMIN_USER@$(public_ip)" "$@"
 }
 
+# Se instala por SSH y no con custom-data: así un fallo se ve aquí, en vez de quedar oculto en la VM.
+prepare_machine() {
+  # Devuelve 2 si el arranque terminó con advertencias: no es un error para nosotros.
+  remote 'cloud-init status --wait >/dev/null' || true
+  if ! remote 'command -v docker >/dev/null'; then
+    echo "Instalando Docker y ajustando el sistema..."
+    remote 'cat > /tmp/first-boot.sh' < deploy/cloud/first-boot.sh
+    remote 'sudo bash /tmp/first-boot.sh' >/dev/null
+  fi
+  remote 'command -v docker >/dev/null' || die "Docker no quedó instalado en la VM"
+}
+
 cmd_provision() {
   ! vm_exists || die "ya existe la VM; use deploy, resize o destroy"
   [[ -f "$KEY_FILE" ]] || ssh-keygen -q -t ed25519 -N '' -C "$NAME-azure" -f "$KEY_FILE"
@@ -59,7 +71,6 @@ cmd_provision() {
   az vm create -g "$GROUP" -n "$NAME" \
     --image Ubuntu2404 --size "$VM_SIZE" \
     --admin-username "$ADMIN_USER" --ssh-key-values "$KEY_FILE.pub" \
-    --custom-data deploy/cloud/first-boot.sh \
     --nsg "$NAME-nsg" \
     --public-ip-address "$NAME-ip" --public-ip-sku Standard --public-ip-address-allocation static \
     --os-disk-size-gb 30 --storage-sku StandardSSD_LRS -o none
@@ -79,7 +90,7 @@ cmd_deploy() {
     [[ "$attempt" -lt 30 ]] || die "no se pudo conectar por SSH"
     sleep 10
   done
-  remote 'cloud-init status --wait >/dev/null'
+  prepare_machine
 
   rsync -az --delete -e \
     "ssh -i $KEY_FILE -o UserKnownHostsFile=$KNOWN_HOSTS -o StrictHostKeyChecking=accept-new" \

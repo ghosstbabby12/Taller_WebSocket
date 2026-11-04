@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Primer arranque de la máquina virtual: Docker y límites del sistema para decenas de miles de conexiones.
+# Prepara la maquina virtual: Docker y limites del sistema para decenas de miles de conexiones.
+# Solo ASCII: el CLI de Azure corrompio una tilde al enviarlo como custom-data.
 set -euxo pipefail
 
 curl -fsSL https://get.docker.com | sh
 # El usuario administrador se llama distinto en cada nube, pero siempre tiene UID 1000.
 usermod -aG docker "$(getent passwd 1000 | cut -d: -f1)"
 
-# Docker usa NAT entre contenedores: cada conexión pasa por la tabla de conntrack.
+# Docker usa NAT entre contenedores: cada conexion pasa por la tabla de conntrack.
 echo nf_conntrack > /etc/modules-load.d/preconteo.conf
 modprobe nf_conntrack
 

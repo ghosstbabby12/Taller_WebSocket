@@ -143,7 +143,9 @@ cmd_deploy() {
     [[ "$attempt" -lt 30 ]] || die "no se pudo conectar por SSH"
     sleep 10
   done
-  remote 'cloud-init status --wait >/dev/null'
+  # Devuelve 2 si el arranque terminó con advertencias: se valida el resultado, no el código.
+  remote 'cloud-init status --wait >/dev/null' || true
+  remote 'command -v docker >/dev/null' || die "el primer arranque no instaló Docker"
 
   rsync -az --delete -e \
     "ssh -i $KEY_FILE -o UserKnownHostsFile=$KNOWN_HOSTS -o StrictHostKeyChecking=accept-new" \
