@@ -2,16 +2,18 @@ import { fullJitterDelay } from './backoff.js';
 import { outbox } from './outbox.js';
 
 const ACK_TIMEOUT_MS = 10000;
+const UNAUTHORIZED_CLOSE_CODE = 4401;
 
 /**
  * Transmite la cola hasta recibir respuesta definitiva. Un acta solo sale de la cola con un ack o un
  * rechazo no reintentable: si la conexión cae antes de la respuesta, se reenvía con el MISMO `idem`.
  */
 export class JuradoClient {
-  constructor({ token, onItemUpdate, onConnection }) {
+  constructor({ token, onItemUpdate, onConnection, onUnauthorized }) {
     this.token = token;
     this.onItemUpdate = onItemUpdate;
     this.onConnection = onConnection;
+    this.onUnauthorized = onUnauthorized;
     this.attempt = 0;
     this.inFlight = new Map();
     window.addEventListener('online', () => this.connectNow());
@@ -22,6 +24,12 @@ export class JuradoClient {
     this.connect();
   }
 
+  stop() {
+    this.stopped = true;
+    clearTimeout(this.reconnectTimer);
+    this.socket?.close();
+  }
+
   /** `idem` se fija una sola vez, al encolar: es lo que hace seguro cualquier reintento. */
   async enqueue(acta) {
     await outbox.put(acta);
@@ -30,6 +38,7 @@ export class JuradoClient {
   }
 
   connectNow() {
+    if (this.stopped) return;
     clearTimeout(this.reconnectTimer);
     if (!this.socket || this.socket.readyState === WebSocket.CLOSED) this.connect();
   }
@@ -40,10 +49,17 @@ export class JuradoClient {
     this.socket = socket;
     socket.onopen = () => socket.send(JSON.stringify({ type: 'hello', token: this.token }));
     socket.onmessage = (event) => this.handleMessage(JSON.parse(event.data));
-    socket.onclose = () => {
+    socket.onclose = (event) => {
       this.ready = false;
       this.inFlight.forEach(clearTimeout);
       this.inFlight.clear();
+      // Token vencido o inválido: reintentar no sirve. La cola se conserva para el próximo ingreso.
+      if (event.code === UNAUTHORIZED_CLOSE_CODE) {
+        this.stop();
+        this.onUnauthorized();
+        return;
+      }
+      if (this.stopped) return;
       this.onConnection('offline');
       this.reconnectTimer = setTimeout(() => this.connect(), fullJitterDelay(this.attempt++));
     };
